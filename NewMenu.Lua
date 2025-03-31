@@ -157,10 +157,10 @@ local function attackLoop(arg1, arg2)
 				print("Firing at:", arg2, "with", orb)
 				Remotee:FireServer(arg2, orb)
 			end
-			task.wait(0.05)
+			task.wait(0.025)
 		end
 
-		task.wait(0.5)
+		task.wait(0.1)
 	end
 end
 
