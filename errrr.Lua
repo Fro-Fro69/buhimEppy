@@ -1,4 +1,5 @@
-local animid = animid.getgenv()
+local animid = getgenv().animid
+print(animid)
 local Player = game:GetService("Players").LocalPlayer
 
 -- Remove default Animate script
