@@ -2029,7 +2029,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 		function Tab:cleartab()
 			for i, v in ipairs(TabPage:GetChildren()) do
-				v:Destroy()
+				if not v:IsA("UIListLayout") then
+					v:Destroy()
+				end
 			end
 		end
 
